@@ -24,7 +24,7 @@ in {
         let
           # use 443 instead of the default 8448 port to unite
           # the client-server and server-server port for simplicity
-          server = { "m.server" = "${fqdn}:443"; };
+          server = { "m.server" = "matrix.princeton.systems:443"; };
         in ''
           add_header Content-Type application/json;
           return 200 '${builtins.toJSON server}';
@@ -32,7 +32,7 @@ in {
       locations."= /.well-known/matrix/client".extraConfig =
         let
           client = {
-            "m.homeserver" =  { "base_url" = "https://${fqdn}"; };
+            "m.homeserver" =  { "base_url" = "https://matrix.princeton.systems"; };
             "m.identity_server" =  { "base_url" = "https://vector.im"; };
           };
         # ACAO required to allow riot-web on any URL to request this json file
@@ -54,7 +54,7 @@ in {
 
       # forward all Matrix API calls to the synapse Matrix homeserver
       locations."/_matrix" = {
-        proxyPass = "http://[::1]:8448"; # without a trailing /
+        proxyPass = "http://sns26.cs.princeton.edu:8448"; # without a trailing /
 
         # Element iOS will send a request to cause Synapse to redirect to the
         # SSO provider with a trailing slash:
@@ -89,7 +89,7 @@ in {
   };
 
   services.postgresql = {
-    enable = true;
+    enable = false;
     initialScript = pkgs.writeText "synapse-init.sql" ''
       CREATE ROLE "matrix-synapse" WITH LOGIN PASSWORD 'synapse';
       CREATE DATABASE "matrix-synapse" WITH OWNER "matrix-synapse"
@@ -100,7 +100,7 @@ in {
   };
 
   services.matrix-synapse = {
-    enable = true;
+    enable = false;
     package = pkgs.matrix-synapse.overrideDerivation (oldAttrs: {
       patches = [./matrix-synapse-localpart.patch];
       doCheck = false;
